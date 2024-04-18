@@ -52,7 +52,6 @@ pub fn generate<T: Service>(
         #(#mod_attributes)*
         pub mod #server_mod {
             use alloc::vec::Vec;
-            use alloc::boxed::Box;
 
             #method_enum
 
@@ -74,19 +73,19 @@ pub fn generate<T: Service>(
                     }
                 }
 
-                pub async fn dispatch_request(&mut self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, prpc::server::Error> {
+                pub async fn dispatch_request(&mut self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
                     match path {
                         #methods
-                        _ => Err(prpc::server::Error::NotFound),
+                        _ => Err(::prpc::server::Error::NotFound),
                     }
                 }
 
-                pub async fn dispatch_json_request(&mut self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, prpc::server::Error> {
+                pub async fn dispatch_json_request(&mut self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
                     match path {
                         #json_methods
-                        _ => Err(prpc::server::Error::NotFound),
+                        _ => Err(::prpc::server::Error::NotFound),
                     }
                 }
             }
@@ -108,7 +107,6 @@ fn generate_trait<T: Service>(
 
     quote! {
         #trait_doc
-        #[async_trait::async_trait]
         pub trait #server_trait {
             #methods
         }
@@ -134,8 +132,8 @@ fn generate_trait_methods<T: Service>(
             (false, false) => {
                 quote! {
                     #method_doc
-                    async fn #name(&mut self, request: #req_message)
-                        -> Result<#res_message, prpc::server::Error>;
+                    fn #name(&mut self, request: #req_message)
+                        -> impl core::future::Future<Output=Result<#res_message, ::prpc::server::Error>> + Send;
                 }
             }
             _ => {
@@ -282,9 +280,9 @@ fn generate_unary<T: Method>(
         }
     } else {
         quote! {
-            let input: #request = prpc::Message::decode(data.as_ref())?;
+            let input: #request = ::prpc::Message::decode(data.as_ref())?;
             let response = self.inner.#method_ident(input).await?;
-            Ok(prpc::codec::encode_message_to_vec(&response))
+            Ok(::prpc::codec::encode_message_to_vec(&response))
         }
     }
 }

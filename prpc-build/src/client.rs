@@ -44,7 +44,7 @@ pub fn generate<T: Service>(
 
             impl<Client> #service_ident<Client>
             where
-                Client: prpc::client::RequestClient
+                Client: ::prpc::client::RequestClient
             {
                 pub fn new(client: Client) -> Self {
                     Self { client }
@@ -99,9 +99,9 @@ fn generate_unary<T: Method>(
         pub async fn #ident(
             &self,
             request: #request,
-        ) -> Result<#response, prpc::client::Error> {
-            let response = self.client.request(#path, prpc::codec::encode_message_to_vec(&request)).await?;
-            Ok(prpc::Message::decode(&response[..])?)
+        ) -> Result<#response, ::prpc::client::Error> {
+            let response = self.client.request(#path, ::prpc::codec::encode_message_to_vec(&request)).await?;
+            Ok(::prpc::Message::decode(&response[..])?)
         }
     }
 }

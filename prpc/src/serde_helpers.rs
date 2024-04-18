@@ -23,6 +23,7 @@ pub mod bytes_as_hex_str {
 pub mod vec_bytes_as_hex_str {
     use serde::{Deserialize, Serialize};
 
+    #[allow(clippy::ptr_arg)]
     pub fn serialize<S>(bytes: &Vec<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

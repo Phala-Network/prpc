@@ -437,6 +437,7 @@ pub fn extend_types(
     buf.push_str(
         r#"
     #![allow(clippy::too_many_arguments)]
+    #![allow(unused_imports)]
 
     use ::prpc::codec::scale::{Encode, Decode, Error as ScaleDecodeError};
     use ::alloc::vec::Vec;
