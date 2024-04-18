@@ -16,4 +16,4 @@ syn = { version = "2.0", features = ["full", "visit-mut", "extra-traits", "parsi
 
 [dev-dependencies]
 insta = "1.14.0"
-rustfmt-snippet = "0.1.1"
+rustfmt-snippet = "0.1.2"
