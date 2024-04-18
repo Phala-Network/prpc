@@ -13,6 +13,7 @@ pub fn configure() -> Builder {
     Builder {
         build_client: true,
         build_server: true,
+        build_scale_ext: true,
         out_dir: None,
         extern_path: Vec::new(),
         field_attributes: Vec::new(),
@@ -199,6 +200,7 @@ impl prost_build::ServiceGenerator for ServiceGenerator {
 pub struct Builder {
     pub(crate) build_client: bool,
     pub(crate) build_server: bool,
+    pub(crate) build_scale_ext: bool,
     pub(crate) extern_path: Vec<(String, String)>,
     pub(crate) field_attributes: Vec<(String, String)>,
     pub(crate) type_attributes: Vec<(String, String)>,
@@ -226,6 +228,12 @@ impl Builder {
     /// Enable or disable server code generation.
     pub fn build_server(mut self, enable: bool) -> Self {
         self.build_server = enable;
+        self
+    }
+
+    /// Enable or disable scale codec extensions generation.
+    pub fn build_scale_ext(mut self, enable: bool) -> Self {
+        self.build_scale_ext = enable;
         self
     }
 
@@ -417,24 +425,22 @@ impl Builder {
             };
         config.file_descriptor_set_path(file_descriptor_set_path.clone());
 
-        let mod_prefix = self.mod_prefix.clone();
-        let type_prefix = self.type_prefix.clone();
-
-        config.service_generator(Box::new(ServiceGenerator::new(self)));
+        config.service_generator(Box::new(ServiceGenerator::new(self.clone())));
 
         if std::env::var("PROTOC").is_err() {
             std::env::set_var("PROTOC", protoc::protoc());
         }
         config.compile_protos(protos, includes)?;
 
-        let patch_file = out_dir.join("protos_codec_extensions.rs");
-
-        crate::protos_codec_extension::extend_types(
-            &file_descriptor_set_path,
-            patch_file,
-            &mod_prefix,
-            &type_prefix,
-        );
+        if self.build_scale_ext {
+            let patch_file = out_dir.join("protos_codec_extensions.rs");
+            crate::protos_codec_extension::extend_types(
+                &file_descriptor_set_path,
+                patch_file,
+                &self.mod_prefix,
+                &self.type_prefix,
+            );
+        }
 
         {
             if format {
