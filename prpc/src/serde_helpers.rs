@@ -1,6 +1,8 @@
 pub use prpc_serde_bytes::prpc_serde_bytes;
 
 pub mod bytes_as_hex_str {
+    use alloc::string::String;
+    use alloc::vec::Vec;
     use serde::{Deserialize, Serialize};
 
     pub fn serialize<S>(bytes: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
@@ -21,6 +23,8 @@ pub mod bytes_as_hex_str {
 }
 
 pub mod vec_bytes_as_hex_str {
+    use alloc::string::String;
+    use alloc::vec::Vec;
     use serde::{Deserialize, Serialize};
 
     pub fn serialize<S>(bytes: &Vec<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error>
@@ -50,6 +54,8 @@ pub mod vec_bytes_as_hex_str {
 }
 
 pub mod option_bytes_as_hex_str {
+    use alloc::string::String;
+    use alloc::vec::Vec;
     use serde::{Deserialize, Serialize};
 
     pub fn serialize<S>(bytes: &Option<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error>
