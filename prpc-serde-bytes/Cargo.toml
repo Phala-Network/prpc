@@ -5,7 +5,7 @@ edition = "2021"
 
 description = "A procedural macro to add custom serialization and deserialization to prost bytes"
 license = "Apache-2.0"
-homepage = "https://github.com/kvinwang/prpc-serde-bytes"
+homepage = "https://github.com/Phala-Network/prpc"
 
 [lib]
 proc-macro = true
