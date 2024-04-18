@@ -1,0 +1,24 @@
+---
+source: prpc-serde-bytes/src/tests.rs
+assertion_line: 21
+expression: "rustfmt_snippet::rustfmt_token_stream(&stream).unwrap()"
+---
+#[derive(Serialize, Deserialize, TypeInfo, Clone, PartialEq, Message)]
+pub struct Attestation {
+    #[prost(int32, tag = "1")]
+    pub version: i32,
+    #[prost(string, tag = "2")]
+    pub provider: String,
+    #[prost(message, optional, tag = "3")]
+    pub payload: Option<AttestationReport>,
+    #[prost(bytes = "vec", tag = "5")]
+    #[serde(with = "::prpc::serde_helpers::bytes_as_hex_str")]
+    pub encoded_report: Vec<u8>,
+    #[prost(bytes = "vec", optional, tag = "6")]
+    #[serde(with = "::prpc::serde_helpers::option_bytes_as_hex_str")]
+    pub timestamp: Option<Vec<u8>>,
+    #[prost(bytes = "vec", repeated, tag = "7")]
+    #[serde(with = "::prpc::serde_helpers::vec_bytes_as_hex_str")]
+    #[serde(default)]
+    pub timestamp: Vec<Vec<u8>>,
+}

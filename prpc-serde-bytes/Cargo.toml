@@ -1,0 +1,19 @@
+[package]
+name = "prpc-serde-bytes"
+version = "0.1.0"
+edition = "2021"
+
+description = "A procedural macro to add custom serialization and deserialization to prost bytes"
+license = "Apache-2.0"
+homepage = "https://github.com/kvinwang/prpc-serde-bytes"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.81"
+syn = { version = "2.0", features = ["full", "visit-mut", "extra-traits", "parsing"] }
+
+[dev-dependencies]
+insta = "1.14.0"
+rustfmt-snippet = "0.1.1"
