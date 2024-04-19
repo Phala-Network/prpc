@@ -1,4 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(async_fn_in_trait)]
 
 #[macro_use]
 extern crate alloc;
@@ -73,12 +74,19 @@ pub mod server {
             }
         }
     }
+
+    pub trait Service {
+        async fn dispatch_request(
+            &self,
+            path: &str,
+            data: impl AsRef<[u8]>,
+            json: bool,
+        ) -> Result<Vec<u8>, Error>;
+    }
 }
 
 pub mod client {
     use super::*;
-
-    use core::future::Future;
 
     /// The Error type for the generated client-side RPCs.
     #[derive(Display, Debug)]
@@ -110,11 +118,7 @@ pub mod client {
     /// Trait for RPC client to implement the underlying data transport.
     /// Required by the generated RPC client.
     pub trait RequestClient {
-        fn request(
-            &self,
-            path: &str,
-            body: Vec<u8>,
-        ) -> impl Future<Output = Result<Vec<u8>, Error>> + Send;
+        async fn request(&self, path: &str, body: Vec<u8>) -> Result<Vec<u8>, Error>;
     }
 }
 

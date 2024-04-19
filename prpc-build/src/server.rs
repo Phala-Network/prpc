@@ -73,7 +73,7 @@ pub fn generate<T: Service>(
                     }
                 }
 
-                pub async fn dispatch_request(&mut self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
+                pub async fn dispatch_request(&self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
                     match path {
                         #methods
@@ -81,12 +81,27 @@ pub fn generate<T: Service>(
                     }
                 }
 
-                pub async fn dispatch_json_request(&mut self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
+                pub async fn dispatch_json_request(&self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
                     match path {
                         #json_methods
                         _ => Err(::prpc::server::Error::NotFound),
                     }
+                }
+            }
+
+            impl<T: #server_trait> ::prpc::server::Service for #server_service<T> {
+                async fn dispatch_request(&self, path: &str, data: impl AsRef<[u8]>, json: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
+                    if json {
+                        self.dispatch_json_request(path, data).await
+                    } else {
+                        self.dispatch_request(path, data).await
+                    }
+                }
+            }
+            impl<T: #server_trait> From<T> for #server_service<T> {
+                fn from(inner: T) -> Self {
+                    Self::new(inner)
                 }
             }
         }
@@ -132,8 +147,7 @@ fn generate_trait_methods<T: Service>(
             (false, false) => {
                 quote! {
                     #method_doc
-                    fn #name(&mut self, request: #req_message)
-                        -> impl core::future::Future<Output=Result<#res_message, ::prpc::server::Error>> + Send;
+                    async fn #name(&self, request: #req_message) -> Result<#res_message, ::prpc::server::Error>;
                 }
             }
             _ => {
