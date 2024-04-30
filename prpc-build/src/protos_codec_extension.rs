@@ -279,7 +279,7 @@ impl<'a> CodeGenerator<'a> {
         self.find_comment(|line| {
             let parts: Vec<_> = line.split_whitespace().collect();
             match parts[..] {
-                ["@codec", name, type_path] => Some((name.to_owned(), type_path.to_owned())),
+                ["@codec", name, _, ..] => Some((name.to_owned(), parts[2..].join(" "))),
                 _ => None,
             }
         })
