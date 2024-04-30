@@ -25,11 +25,8 @@ pub mod server {
         NotFound,
         /// Failed to decode the request parameters
         DecodeError(DecodeError),
-        /// Some error occurred when handling the request
-        AppError(String),
         /// Error for contract query
-        #[display(fmt = "ContractQueryError({_0})")]
-        ContractQueryError(String),
+        BadRequest(String),
     }
 
     impl From<DecodeError> for Error {
@@ -45,6 +42,12 @@ pub mod server {
     impl From<Error> for anyhow::Error {
         fn from(error: Error) -> Self {
             Self::msg(error)
+        }
+    }
+
+    impl From<anyhow::Error> for Error {
+        fn from(error: anyhow::Error) -> Self {
+            Self::BadRequest(error.to_string())
         }
     }
 
