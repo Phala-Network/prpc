@@ -131,20 +131,25 @@ impl<'a> CodeGenerator<'a> {
     }
 
     fn append_field(&mut self, field: FieldDescriptorProto, buf: &mut String) -> bool {
-        let optional = self.optional(&field);
+        let is_optional = self.is_optional(&field);
+        let is_repeated = self.is_repeated(&field);
         let ty = self.resolve_decoded_type(&field);
 
-        debug!("    field: {:?}, type: {:?}", field.name(), ty,);
+        debug!("    field: {:?}, type: {:?}", field.name(), ty);
 
         if let Some((name, _type_path)) = self.codec_decoration() {
             match name.as_str() {
                 "scale" => {
                     buf.push_str(&format!(
-                        "pub fn decode_{}(&self) -> Result<{}, ScaleDecodeError> {{\n",
+                        "pub fn decode_{}(&self) -> Result<{ty}, ScaleDecodeError> {{\n",
                         self.typed_field_name(&field),
-                        ty
                     ));
-                    if optional {
+                    if is_repeated {
+                        buf.push_str(&format!(
+                            "self.{}.iter().map(|v| Decode::decode(&mut &v[..])).collect()",
+                            field.name()
+                        ));
+                    } else if is_optional {
                         buf.push_str(&format!(
                             "self.{}.as_ref().map(|v| Decode::decode(&mut &v[..])).transpose()",
                             field.name()
@@ -220,7 +225,13 @@ impl<'a> CodeGenerator<'a> {
             for (field, idx) in fields {
                 self.path.push(idx as i32);
                 if self.codec_decoration().is_some() {
-                    if self.optional(&field) {
+                    if self.is_repeated(&field) {
+                        buf.push_str(&format!(
+                            "{}: {}.iter().map(|x| x.encode()).collect(),\n",
+                            field.name(),
+                            self.typed_field_name(&field),
+                        ));
+                    } else if self.is_optional(&field) {
                         buf.push_str(&format!(
                             "{}: {}.map(|x| x.encode()),\n",
                             field.name(),
@@ -295,7 +306,7 @@ impl<'a> CodeGenerator<'a> {
         self.mod_path.pop();
     }
 
-    fn optional(&self, field: &FieldDescriptorProto) -> bool {
+    fn is_optional(&self, field: &FieldDescriptorProto) -> bool {
         if field.proto3_optional.unwrap_or(false) {
             return true;
         }
@@ -308,6 +319,10 @@ impl<'a> CodeGenerator<'a> {
             Type::Message => true,
             _ => self.syntax == Syntax::Proto2,
         }
+    }
+
+    fn is_repeated(&self, field: &FieldDescriptorProto) -> bool {
+        field.label() == Label::Repeated
     }
 
     fn typed_field_name<'f>(&self, field: &'f FieldDescriptorProto) -> &'f str {
@@ -326,7 +341,9 @@ impl<'a> CodeGenerator<'a> {
     fn resolve_decoded_type(&self, field: &FieldDescriptorProto) -> String {
         if let Some((_name, type_path)) = self.codec_decoration() {
             let type_path = self.type_prefix.clone() + type_path.as_str();
-            if self.optional(field) {
+            if self.is_repeated(field) {
+                return format!("Vec<{}>", type_path);
+            } else if self.is_optional(field) {
                 return format!("Option<{type_path}>");
             } else {
                 return type_path;
@@ -353,7 +370,7 @@ impl<'a> CodeGenerator<'a> {
         } else {
             ty
         };
-        if self.optional(field) {
+        if self.is_optional(field) {
             format!("Option<{ty}>")
         } else if field.label() == Label::Repeated {
             format!("::prost::alloc::vec::Vec<{ty}>")
