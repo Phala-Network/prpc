@@ -461,9 +461,6 @@ pub fn extend_types(
     use ::alloc::string::String;
     "#,
     );
-    if !mod_prefix.is_empty() {
-        buf.push_str(&format!("use {mod_prefix}*;\n"));
-    }
     for file in file_descriptor_set.file {
         CodeGenerator::generate(file, &mut buf, mod_prefix, type_prefix);
     }
