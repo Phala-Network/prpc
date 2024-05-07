@@ -84,7 +84,8 @@ pub mod server {
     }
 
     pub trait Service {
-        fn methods() -> Vec<&'static str>;
+        type Methods: AsRef<[&'static str]>;
+        fn methods() -> Self::Methods;
         async fn dispatch_request(
             &self,
             path: &str,
@@ -118,6 +119,7 @@ pub mod server {
         // Base case for the recursion: an empty tuple implements Foo.
         () => {
             impl<A> Service for ComposedService<(), A> {
+                type Methods = Vec<&'static str>;
                 fn methods() -> Vec<&'static str> {
                     Vec::new()
                 }
@@ -141,11 +143,12 @@ pub mod server {
                 $head: NamedService + From<A>,
                 $( $tail: NamedService + From<A>, )*
             {
-                fn methods() -> Vec<&'static str> {
+                type Methods = Vec<&'static str>;
+                fn methods() -> Self::Methods {
                     let mut methods = Vec::new();
-                    methods.extend_from_slice($head::methods().as_slice());
+                    methods.extend_from_slice($head::methods().as_ref());
                     $(
-                        methods.extend_from_slice($tail::methods().as_slice());
+                        methods.extend_from_slice($tail::methods().as_ref());
                     )*
                     methods
                 }

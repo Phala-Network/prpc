@@ -94,8 +94,9 @@ pub fn generate<T: Service>(
                 const NAME: &'static str = #service_name;
             }
             impl<T: #server_trait> ::prpc::server::Service for #server_service<T> {
-                fn methods() -> Vec<&'static str> {
-                    Self::supported_methods().to_vec()
+                type Methods = &'static [&'static str];
+                fn methods() -> Self::Methods {
+                    Self::supported_methods()
                 }
                 async fn dispatch_request(&self, path: &str, data: impl AsRef<[u8]>, json: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
                     if json {
