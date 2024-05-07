@@ -74,6 +74,8 @@ pub fn generate<T: Service>(
 
                 pub async fn dispatch_request(&self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
+                    #[allow(unused_variables)]
+                    let data = data;
                     match path {
                         #methods
                         _ => Err(::prpc::server::Error::NotFound),
@@ -82,6 +84,8 @@ pub fn generate<T: Service>(
 
                 pub async fn dispatch_json_request(&self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
+                    #[allow(unused_variables)]
+                    let data = data;
                     match path {
                         #json_methods
                         _ => Err(::prpc::server::Error::NotFound),
