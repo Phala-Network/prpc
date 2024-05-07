@@ -66,7 +66,7 @@ pub trait Method {
         &self,
         proto_path: &str,
         compile_well_known_types: bool,
-    ) -> (TokenStream, TokenStream);
+    ) -> (Option<TokenStream>, TokenStream);
 }
 
 /// Attributes that will be added to `mod` and `struct` items.

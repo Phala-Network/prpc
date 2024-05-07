@@ -95,11 +95,18 @@ fn generate_unary<T: Method>(
     let ident = format_ident!("{}", method.name());
     let (request, response) = method.request_response_name(proto_path, compile_well_known_types);
 
-    quote! {
+    template_quote::quote! {
         pub async fn #ident(
-            &self,
-            request: #request,
+            &self
+            #(if request.is_some())
+            {
+                , request: #request,
+            }
         ) -> Result<#response, ::prpc::client::Error> {
+            #(if request.is_none())
+            {
+                let request = ();
+            }
             let response = self.client.request(#path, ::prpc::codec::encode_message_to_vec(&request)).await?;
             Ok(::prpc::Message::decode(&response[..])?)
         }

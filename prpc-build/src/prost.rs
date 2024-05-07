@@ -100,19 +100,25 @@ impl crate::Method for Method {
         &self,
         proto_path: &str,
         compile_well_known_types: bool,
-    ) -> (TokenStream, TokenStream) {
-        let request = if (is_google_type(&self.input_proto_type) && !compile_well_known_types)
-            || self.input_type.starts_with("::")
-        {
-            self.input_type.parse::<TokenStream>().unwrap()
-        } else if self.input_type.starts_with("crate::") {
-            syn::parse_str::<syn::Path>(&self.input_type)
-                .unwrap()
-                .to_token_stream()
+    ) -> (Option<TokenStream>, TokenStream) {
+        let request = if is_empty_type(&self.input_proto_type) {
+            None
         } else {
-            syn::parse_str::<syn::Path>(&format!("{proto_path}::{}", self.input_type))
-                .unwrap()
-                .to_token_stream()
+            Some(
+                if (is_google_type(&self.input_proto_type) && !compile_well_known_types)
+                    || self.input_type.starts_with("::")
+                {
+                    self.input_type.parse::<TokenStream>().unwrap()
+                } else if self.input_type.starts_with("crate::") {
+                    syn::parse_str::<syn::Path>(&self.input_type)
+                        .unwrap()
+                        .to_token_stream()
+                } else {
+                    syn::parse_str::<syn::Path>(&format!("{proto_path}::{}", self.input_type))
+                        .unwrap()
+                        .to_token_stream()
+                },
+            )
         };
 
         let response = if (is_google_type(&self.output_proto_type) && !compile_well_known_types)
@@ -135,6 +141,10 @@ impl crate::Method for Method {
 
 fn is_google_type(ty: &str) -> bool {
     ty.starts_with(".google.protobuf")
+}
+
+fn is_empty_type(ty: &str) -> bool {
+    ty == ".google.protobuf.Empty"
 }
 
 struct ServiceGenerator {
