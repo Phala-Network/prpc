@@ -33,6 +33,7 @@ pub fn generate<T: Service>(
     let server_service = quote::format_ident!("{}Server", service.name());
     let server_trait = quote::format_ident!("{}", service.name());
     let server_mod = quote::format_ident!("{}_server", naive_snake_case(service.name()));
+    let service_name = Lit::Str(LitStr::new(service.name(), Span::call_site()));
     let supported_methods = generate_supported_methods(service, emit_package);
     let method_enum = generate_methods_enum(service, emit_package);
     let generated_trait = generate_trait(
@@ -54,8 +55,6 @@ pub fn generate<T: Service>(
             use alloc::vec::Vec;
 
             #method_enum
-
-            #supported_methods
 
             #generated_trait
 
@@ -88,9 +87,16 @@ pub fn generate<T: Service>(
                         _ => Err(::prpc::server::Error::NotFound),
                     }
                 }
+                #supported_methods
             }
 
+            impl<T: #server_trait> ::prpc::server::NamedService for #server_service<T> {
+                const NAME: &'static str = #service_name;
+            }
             impl<T: #server_trait> ::prpc::server::Service for #server_service<T> {
+                fn methods() -> Vec<&'static str> {
+                    Self::supported_methods().to_vec()
+                }
                 async fn dispatch_request(&self, path: &str, data: impl AsRef<[u8]>, json: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
                     if json {
                         self.dispatch_json_request(path, data).await
