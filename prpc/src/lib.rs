@@ -94,12 +94,12 @@ pub mod server {
         ) -> Result<Vec<u8>, Error>;
     }
 
-    pub struct ComposedService<T, A> {
+    pub struct ComposedService<A, T> {
         app: A,
         _marker: PhantomData<T>,
     }
 
-    impl<T, A> ComposedService<T, A> {
+    impl<T, A> ComposedService<A, T> {
         pub fn new(app: A) -> Self {
             Self {
                 app,
@@ -108,7 +108,7 @@ pub mod server {
         }
     }
 
-    impl<A, T> From<A> for ComposedService<T, A> {
+    impl<A, T> From<A> for ComposedService<A, T> {
         fn from(app: A) -> Self {
             Self::new(app)
         }
@@ -118,7 +118,7 @@ pub mod server {
     macro_rules! impl_service_for_tuple {
         // Base case for the recursion: an empty tuple implements Foo.
         () => {
-            impl<A> Service for ComposedService<(), A> {
+            impl<A> Service for ComposedService<A, ()> {
                 type Methods = Vec<&'static str>;
                 fn methods() -> Vec<&'static str> {
                     Vec::new()
@@ -137,7 +137,7 @@ pub mod server {
 
         // Recursive step: T implements Foo, and so does Tail.
         ( $head:ident $(, $tail:ident)* $(,)*) => {
-            impl<A, $head, $( $tail, )*> Service for ComposedService<($head, $( $tail, )*), A>
+            impl<A, $head, $( $tail, )*> Service for ComposedService<A, ($head, $( $tail, )*)>
             where
                 A: Clone,
                 $head: NamedService + From<A>,
@@ -177,8 +177,7 @@ pub mod server {
         };
     }
 
-    // impl_service_for_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12);
-    impl_service_for_tuple!(T1, T2);
+    impl_service_for_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12);
 }
 
 pub mod client {
