@@ -48,7 +48,7 @@ pub mod server {
 
     impl From<anyhow::Error> for Error {
         fn from(error: anyhow::Error) -> Self {
-            Self::BadRequest(error.to_string())
+            Self::BadRequest(format!("{error:?}"))
         }
     }
 
