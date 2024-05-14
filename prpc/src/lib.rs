@@ -87,7 +87,7 @@ pub mod server {
         type Methods: AsRef<[&'static str]>;
         fn methods() -> Self::Methods;
         async fn dispatch_request(
-            &self,
+            self,
             path: &str,
             data: impl AsRef<[u8]>,
             json: bool,
@@ -125,7 +125,7 @@ pub mod server {
                 }
 
                 async fn dispatch_request(
-                    &self,
+                    self,
                     _path: &str,
                     _data: impl AsRef<[u8]>,
                     _json: bool,
@@ -139,7 +139,6 @@ pub mod server {
         ( $head:ident $(, $tail:ident)* $(,)*) => {
             impl<A, $head, $( $tail, )*> Service for ComposedService<A, ($head, $( $tail, )*)>
             where
-                A: Clone,
                 $head: NamedService + From<A>,
                 $( $tail: NamedService + From<A>, )*
             {
@@ -154,18 +153,18 @@ pub mod server {
                 }
 
                 async fn dispatch_request(
-                    &self,
+                    self,
                     path: &str,
                     data: impl AsRef<[u8]>,
                     json: bool,
                 ) -> Result<Vec<u8>, Error> {
                     let service_name = path.split('.').next().unwrap_or_default();
                     if service_name == $head::NAME {
-                        return $head::from(self.app.clone()).dispatch_request(path, data, json).await;
+                        return $head::from(self.app).dispatch_request(path, data, json).await;
                     }
                     $(
                         if service_name == $tail::NAME {
-                            return $tail::from(self.app.clone()).dispatch_request(path, data, json).await;
+                            return $tail::from(self.app).dispatch_request(path, data, json).await;
                         }
                     )*
                     Err(Error::NotFound)
