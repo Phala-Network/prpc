@@ -72,7 +72,7 @@ pub fn generate<T: Service>(
                     }
                 }
 
-                pub async fn dispatch_request(&self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
+                pub async fn dispatch_request(self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
                     #[allow(unused_variables)]
                     let data = data;
@@ -82,7 +82,7 @@ pub fn generate<T: Service>(
                     }
                 }
 
-                pub async fn dispatch_json_request(&self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
+                pub async fn dispatch_json_request(self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
                     #[allow(unused_variables)]
                     let data = data;
@@ -102,7 +102,7 @@ pub fn generate<T: Service>(
                 fn methods() -> Self::Methods {
                     Self::supported_methods()
                 }
-                async fn dispatch_request(&self, path: &str, data: impl AsRef<[u8]>, json: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
+                async fn dispatch_request(self, path: &str, data: impl AsRef<[u8]>, json: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
                     if json {
                         self.dispatch_json_request(path, data).await
                     } else {
@@ -158,7 +158,7 @@ fn generate_trait_methods<T: Service>(
             (false, false) => {
                 template_quote::quote! {
                     #method_doc
-                    async fn #name(&self
+                    async fn #name(self
                         #(if req_message.is_some()) {
                             , request: #req_message
                         }
