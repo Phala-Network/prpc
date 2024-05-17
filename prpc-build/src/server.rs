@@ -162,7 +162,7 @@ fn generate_trait_methods<T: Service>(
                         #(if req_message.is_some()) {
                             , request: #req_message
                         }
-                    ) -> Result<#res_message, ::prpc::server::Error>;
+                    ) -> ::anyhow::Result<#res_message>;
                 }
             }
             _ => {

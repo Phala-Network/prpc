@@ -454,7 +454,7 @@ impl Builder {
 
         {
             if format {
-                super::fmt(out_dir.to_str().expect("Expected utf8 out_dir"));
+                super::fmt(out_dir.to_str().expect("expected utf8 out_dir"));
             }
         }
 
