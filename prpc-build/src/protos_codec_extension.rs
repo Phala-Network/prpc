@@ -395,11 +395,12 @@ impl<'a> CodeGenerator<'a> {
             ident_path.next();
         }
 
-        local_path
+        let path = local_path
             .map(|_| "super".to_string())
             .chain(ident_path.map(to_snake))
             .chain(std::iter::once(to_upper_camel(ident_type)))
-            .join("::")
+            .join("::");
+        format!("{}{}", self.mod_prefix, path)
     }
 }
 
