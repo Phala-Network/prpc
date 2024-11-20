@@ -9,7 +9,7 @@ pub mod bytes_as_hex_str {
     where
         S: serde::Serializer,
     {
-        format!("0x{}", hex_fmt::HexFmt(bytes)).serialize(serializer)
+        hex::encode(bytes).serialize(serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
@@ -32,10 +32,7 @@ pub mod vec_bytes_as_hex_str {
     where
         S: serde::Serializer,
     {
-        let hex_strs: Vec<String> = bytes
-            .iter()
-            .map(|bytes| format!("0x{}", hex_fmt::HexFmt(bytes)))
-            .collect();
+        let hex_strs: Vec<String> = bytes.iter().map(|bytes| hex::encode(bytes)).collect();
         hex_strs.serialize(serializer)
     }
 
@@ -64,7 +61,7 @@ pub mod option_bytes_as_hex_str {
         S: serde::Serializer,
     {
         match bytes {
-            Some(bytes) => format!("0x{}", hex_fmt::HexFmt(bytes)).serialize(serializer),
+            Some(bytes) => hex::encode(bytes).serialize(serializer),
             None => serializer.serialize_none(),
         }
     }
