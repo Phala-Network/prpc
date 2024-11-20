@@ -1,6 +1,6 @@
 [package]
 name = "prpc"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2018"
 
 description = "Phala's RPC library"
