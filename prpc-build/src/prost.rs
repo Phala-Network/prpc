@@ -437,9 +437,11 @@ impl Builder {
 
         config.service_generator(Box::new(ServiceGenerator::new(self.clone())));
 
-        if std::env::var("PROTOC").is_err() {
-            std::env::set_var("PROTOC", protoc::protoc());
-        }
+        let protoc = match std::env::var("PROTOC") {
+            Ok(path) => PathBuf::from(path),
+            Err(_) => protoc::protoc(),
+        };
+        config.protoc_executable(protoc);
         config.compile_protos(protos, includes)?;
 
         if self.build_scale_ext {
