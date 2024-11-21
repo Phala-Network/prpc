@@ -191,6 +191,8 @@ pub mod client {
         ServerError(super::server::ProtoError),
         /// Other errors sush as networking error.
         RpcError(String),
+        /// Other errors such as networking error.
+        Other(anyhow::Error),
     }
 
     impl From<DecodeError> for Error {
@@ -202,10 +204,20 @@ pub mod client {
     #[cfg(feature = "std")]
     impl std::error::Error for Error {}
 
+    impl From<anyhow::Error> for Error {
+        fn from(error: anyhow::Error) -> Self {
+            Self::Other(error)
+        }
+    }
+
     #[cfg(not(feature = "std"))]
     impl From<Error> for anyhow::Error {
         fn from(error: Error) -> Self {
-            Self::msg(error)
+            if let Error::Other(err) = error {
+                err
+            } else {
+                Self::msg(error)
+            }
         }
     }
 
