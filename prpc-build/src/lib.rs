@@ -234,23 +234,21 @@ fn naive_snake_case(name: &str) -> String {
     s
 }
 
-fn join_path(emit_package: bool, package: &str, service: &str, method: &str) -> String {
-    let mut path = String::new();
-    if emit_package {
-        path += package;
+fn join_path(config: &Builder, package: &str, service: &str, method: &str) -> String {
+    let mut parts = vec![];
+    if config.emit_package {
+        parts.push(package);
     }
 
-    if !path.is_empty() {
-        path += ".";
+    if config.emit_service_name {
+        parts.push(service);
     }
-
-    path += service;
 
     if !method.is_empty() {
-        path += ".";
-        path += method;
+        parts.push(method);
     }
-    path
+
+    parts.join(".")
 }
 
 #[cfg(test)]

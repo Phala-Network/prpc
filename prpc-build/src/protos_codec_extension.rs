@@ -453,8 +453,7 @@ pub fn extend_types(
     let file_descriptor_set = FileDescriptorSet::decode(&*buf).unwrap();
     let mut buf = String::new();
     buf.push_str(
-        r#"
-    #![allow(clippy::too_many_arguments)]
+        r#"#![allow(clippy::too_many_arguments)]
     #![allow(unused_imports)]
 
     use ::prpc::codec::scale::{Encode, Decode, Error as ScaleDecodeError};

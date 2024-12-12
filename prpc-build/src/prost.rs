@@ -24,6 +24,7 @@ pub fn configure() -> Builder {
         compile_well_known_types: false,
         format: true,
         emit_package: true,
+        emit_service_name: true,
         protoc_args: Vec::new(),
         file_descriptor_set_path: None,
         mod_prefix: Default::default(),
@@ -166,24 +167,12 @@ impl ServiceGenerator {
 impl prost_build::ServiceGenerator for ServiceGenerator {
     fn generate(&mut self, service: prost_build::Service, _buf: &mut String) {
         if self.builder.build_server {
-            let server = server::generate(
-                &service,
-                self.builder.emit_package,
-                &self.builder.proto_path,
-                self.builder.compile_well_known_types,
-                &self.builder.server_attributes,
-            );
+            let server = server::generate(&service, &self.builder);
             self.servers.extend(server);
         }
 
         if self.builder.build_client {
-            let client = client::generate(
-                &service,
-                self.builder.emit_package,
-                &self.builder.proto_path,
-                self.builder.compile_well_known_types,
-                &self.builder.client_attributes,
-            );
+            let client = client::generate(&service, &self.builder);
             self.clients.extend(client);
         }
     }
@@ -218,6 +207,7 @@ pub struct Builder {
     pub(crate) client_attributes: Attributes,
     pub(crate) proto_path: String,
     pub(crate) emit_package: bool,
+    pub(crate) emit_service_name: bool,
     pub(crate) compile_well_known_types: bool,
     pub(crate) protoc_args: Vec<OsString>,
 
@@ -362,6 +352,12 @@ impl Builder {
     /// This effectively sets prost's exported package to an empty string.
     pub fn disable_package_emission(mut self) -> Self {
         self.emit_package = false;
+        self
+    }
+
+    /// Disable emitting service name in rpc endpoints.
+    pub fn disable_service_name_emission(mut self) -> Self {
+        self.emit_service_name = false;
         self
     }
 
