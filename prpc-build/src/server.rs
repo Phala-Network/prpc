@@ -10,8 +10,8 @@ use syn::{Ident, Lit, LitStr};
 /// a public module containing the server service and handler trait.
 pub fn generate<T: Service>(service: &T, config: &Builder) -> TokenStream {
     let attributes = &config.server_attributes;
-    let methods = generate_methods(service, config, true);
-    let json_methods = generate_methods(service, config, false);
+    let methods = generate_methods(service, config, false);
+    let json_methods = generate_methods(service, config, true);
 
     let server_service = quote::format_ident!("{}Server", service.name());
     let server_trait = quote::format_ident!("{}Rpc", service.name());
