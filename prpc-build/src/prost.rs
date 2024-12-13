@@ -465,8 +465,8 @@ impl Builder {
     /// Enable serde serialization/deserialization for all generated types.
     /// This adds the necessary derives and attributes for serde compatibility.
     pub fn enable_serde_extension(self) -> Self {
-        self.type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
-            .type_attribute(".", "#[::prpc::serde_helpers::prpc_serde_bytes]")
+        self.type_attribute(".", "#[::prpc::serde_helpers::prpc_serde_bytes]")
+            .type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
             .field_attribute(".", "#[serde(default)]")
     }
 
