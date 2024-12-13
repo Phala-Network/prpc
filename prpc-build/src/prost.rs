@@ -458,4 +458,36 @@ impl Builder {
 
         Ok(())
     }
+
+    /// Enable serde serialization/deserialization for all generated types.
+    /// This adds the necessary derives and attributes for serde compatibility.
+    pub fn enable_serde_extension(self) -> Self {
+        self.type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
+            .type_attribute(".", "#[::prpc::serde_helpers::prpc_serde_bytes]")
+            .field_attribute(".", "#[serde(default)]")
+    }
+
+    /// Compile all .proto files in the specified directory.
+    /// The include directory will be the same as the proto directory.
+    pub fn compile_dir(self, proto_dir: impl AsRef<Path>) -> io::Result<()> {
+        let proto_dir = proto_dir.as_ref();
+
+        let proto_files: Vec<PathBuf> = std::fs::read_dir(proto_dir)?
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.extension()?.to_str()? == "proto" {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if proto_files.is_empty() {
+            return Ok(());
+        }
+
+        self.compile(&proto_files, &[proto_dir])
+    }
 }
