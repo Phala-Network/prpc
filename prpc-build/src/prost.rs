@@ -402,6 +402,9 @@ impl Builder {
         } else {
             PathBuf::from(std::env::var("OUT_DIR").unwrap())
         };
+        if !out_dir.exists() {
+            fs_err::create_dir_all(&out_dir)?;
+        }
 
         let format = self.format;
 
