@@ -48,20 +48,16 @@ pub fn generate<T: Service>(service: &T, config: &Builder) -> TokenStream {
                     }
                 }
 
-                pub async fn dispatch_request(self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
+                pub async fn dispatch_request(self, path: &str, _data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
-                    #[allow(unused_variables)]
-                    let data = data;
                     match path {
                         #methods
                         _ => Err(::prpc::server::Error::NotFound),
                     }
                 }
 
-                pub async fn dispatch_json_request(self, path: &str, data: impl AsRef<[u8]>, query: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
+                pub async fn dispatch_json_request(self, path: &str, _data: impl AsRef<[u8]>, _query: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
-                    #[allow(unused_variables)]
-                    let data = data;
                     match path {
                         #json_methods
                         _ => Err(::prpc::server::Error::NotFound),
@@ -259,10 +255,10 @@ fn generate_unary<T: Method>(
                 let response = self.inner.#method_ident().await?;
             }
             #(else) {
-                let data = data.as_ref();
+                let data = _data.as_ref();
                 let input: #request = if data.is_empty() {
                     Default::default()
-                } else if query {
+                } else if _query {
                     ::prpc::serde_qs::from_bytes(data)?
                 } else {
                     ::prpc::serde_json::from_slice(data)?
@@ -277,7 +273,7 @@ fn generate_unary<T: Method>(
                 let response = self.inner.#method_ident().await?;
             }
             #(else) {
-                let input: #request = ::prpc::Message::decode(data.as_ref())?;
+                let input: #request = ::prpc::Message::decode(_data.as_ref())?;
                 let response = self.inner.#method_ident(input).await?;
             }
             Ok(::prpc::codec::encode_message_to_vec(&response))
