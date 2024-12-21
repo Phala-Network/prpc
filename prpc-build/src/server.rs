@@ -58,7 +58,7 @@ pub fn generate<T: Service>(service: &T, config: &Builder) -> TokenStream {
                     }
                 }
 
-                pub async fn dispatch_json_request(self, path: &str, data: impl AsRef<[u8]>) -> Result<Vec<u8>, ::prpc::server::Error> {
+                pub async fn dispatch_json_request(self, path: &str, data: impl AsRef<[u8]>, query: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
                     #![allow(clippy::let_unit_value)]
                     #[allow(unused_variables)]
                     let data = data;
@@ -78,9 +78,9 @@ pub fn generate<T: Service>(service: &T, config: &Builder) -> TokenStream {
                 fn methods() -> Self::Methods {
                     Self::supported_methods()
                 }
-                async fn dispatch_request(self, path: &str, data: impl AsRef<[u8]>, json: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
+                async fn dispatch_request(self, path: &str, data: impl AsRef<[u8]>, json: bool, query: bool) -> Result<Vec<u8>, ::prpc::server::Error> {
                     if json {
-                        self.dispatch_json_request(path, data).await
+                        self.dispatch_json_request(path, data, query).await
                     } else {
                         self.dispatch_request(path, data).await
                     }
@@ -262,8 +262,10 @@ fn generate_unary<T: Method>(
                 let data = data.as_ref();
                 let input: #request = if data.is_empty() {
                     Default::default()
+                } else if query {
+                    ::prpc::serde_qs::from_bytes(data)?
                 } else {
-                    serde_json::from_slice(data)?
+                    ::prpc::serde_json::from_slice(data)?
                 };
                 let response = self.inner.#method_ident(input).await?;
             }

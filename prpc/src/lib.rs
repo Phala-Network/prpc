@@ -13,9 +13,13 @@ pub use prost::Message;
 
 pub mod serde_helpers;
 
+pub use serde_json;
+pub use serde_qs;
+
 pub mod server {
     use super::*;
     use parity_scale_codec::Error as ScaleCodecErr;
+    use serde_qs::Error as SerdeQsErr;
 
     use core::marker::PhantomData;
 
@@ -64,6 +68,12 @@ pub mod server {
         }
     }
 
+    impl From<SerdeQsErr> for Error {
+        fn from(e: SerdeQsErr) -> Self {
+            Self::DecodeError(DecodeError::new(e.to_string()))
+        }
+    }
+
     /// The final Error type of RPCs to be serialized to protobuf.
     #[derive(Display, Message)]
     pub struct ProtoError {
@@ -91,6 +101,7 @@ pub mod server {
             path: &str,
             data: impl AsRef<[u8]>,
             json: bool,
+            query: bool,
         ) -> Result<Vec<u8>, Error>;
     }
 
@@ -129,6 +140,7 @@ pub mod server {
                     _path: &str,
                     _data: impl AsRef<[u8]>,
                     _json: bool,
+                    _query: bool,
                 ) -> Result<Vec<u8>, Error> {
                     Err(Error::NotFound)
                 }
@@ -157,14 +169,15 @@ pub mod server {
                     path: &str,
                     data: impl AsRef<[u8]>,
                     json: bool,
+                    query: bool,
                 ) -> Result<Vec<u8>, Error> {
                     let service_name = path.split('.').next().unwrap_or_default();
                     if service_name == $head::NAME {
-                        return $head::from(self.app).dispatch_request(path, data, json).await;
+                        return $head::from(self.app).dispatch_request(path, data, json, query).await;
                     }
                     $(
                         if service_name == $tail::NAME {
-                            return $tail::from(self.app).dispatch_request(path, data, json).await;
+                            return $tail::from(self.app).dispatch_request(path, data, json, query).await;
                         }
                     )*
                     Err(Error::NotFound)
