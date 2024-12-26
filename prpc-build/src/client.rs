@@ -84,7 +84,7 @@ fn generate_unary<T: Method>(method: &T, config: &Builder, path: String) -> Toke
             {
                 let request = ();
             }
-            Ok(self.client.request(#path, request).await?)
+            self.client.request(#path, request).await
         }
     }
 }
