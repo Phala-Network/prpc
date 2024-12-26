@@ -84,8 +84,7 @@ fn generate_unary<T: Method>(method: &T, config: &Builder, path: String) -> Toke
             {
                 let request = ();
             }
-            let response = self.client.request(#path, ::prpc::codec::encode_message_to_vec(&request)).await?;
-            Ok(::prpc::Message::decode(&response[..])?)
+            Ok(self.client.request(#path, request).await?)
         }
     }
 }

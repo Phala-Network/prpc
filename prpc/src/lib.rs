@@ -193,6 +193,8 @@ pub mod server {
 }
 
 pub mod client {
+    use serde::{de::DeserializeOwned, Serialize};
+
     use super::*;
 
     /// The Error type for the generated client-side RPCs.
@@ -237,7 +239,10 @@ pub mod client {
     /// Trait for RPC client to implement the underlying data transport.
     /// Required by the generated RPC client.
     pub trait RequestClient {
-        async fn request(&self, path: &str, body: Vec<u8>) -> Result<Vec<u8>, Error>;
+        async fn request<T, R>(&self, path: &str, body: T) -> Result<R, Error>
+        where
+            T: Message + Serialize,
+            R: Message + DeserializeOwned;
     }
 }
 
