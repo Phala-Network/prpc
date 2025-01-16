@@ -52,7 +52,7 @@ pub fn generate<T: Service>(service: &T, config: &Builder) -> TokenStream {
                     #![allow(clippy::let_unit_value)]
                     match path {
                         #methods
-                        _ => Err(::prpc::server::Error::NotFound),
+                        _ => anyhow::bail!("Service not found: {path}"),
                     }
                 }
 
@@ -60,7 +60,7 @@ pub fn generate<T: Service>(service: &T, config: &Builder) -> TokenStream {
                     #![allow(clippy::let_unit_value)]
                     match path {
                         #json_methods
-                        _ => Err(::prpc::server::Error::NotFound),
+                        _ => anyhow::bail!("Service not found: {path}"),
                     }
                 }
                 #supported_methods

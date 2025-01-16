@@ -1,13 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(async_fn_in_trait)]
 
-#[macro_use]
 extern crate alloc;
 
-use alloc::string::String;
 use alloc::vec::Vec;
-use derive_more::Display;
-use prost::DecodeError;
 
 pub use prost::Message;
 
@@ -18,61 +14,10 @@ pub use serde_qs;
 
 pub mod server {
     use super::*;
-    use parity_scale_codec::Error as ScaleCodecErr;
-    use serde_qs::Error as SerdeQsErr;
+    pub use anyhow::Error;
 
     use core::marker::PhantomData;
-
-    /// Error for server side RPC handlers. Finally, this error will be wrapped in a `ProtoError`.
-    #[derive(Display, Debug)]
-    pub enum Error {
-        /// The requesting RPC method is not recognized
-        NotFound,
-        /// Failed to decode the request parameters
-        DecodeError(DecodeError),
-        /// Error for contract query
-        BadRequest(String),
-    }
-
-    impl From<DecodeError> for Error {
-        fn from(e: DecodeError) -> Self {
-            Self::DecodeError(e)
-        }
-    }
-
-    #[cfg(feature = "std")]
-    impl std::error::Error for Error {}
-
-    #[cfg(not(feature = "std"))]
-    impl From<Error> for anyhow::Error {
-        fn from(error: Error) -> Self {
-            Self::msg(error)
-        }
-    }
-
-    impl From<anyhow::Error> for Error {
-        fn from(error: anyhow::Error) -> Self {
-            Self::BadRequest(format!("{error:?}"))
-        }
-    }
-
-    impl From<ScaleCodecErr> for Error {
-        fn from(e: ScaleCodecErr) -> Self {
-            Self::DecodeError(DecodeError::new(e.to_string()))
-        }
-    }
-
-    impl From<serde_json::Error> for Error {
-        fn from(e: serde_json::Error) -> Self {
-            Self::DecodeError(DecodeError::new(e.to_string()))
-        }
-    }
-
-    impl From<SerdeQsErr> for Error {
-        fn from(e: SerdeQsErr) -> Self {
-            Self::DecodeError(DecodeError::new(e.to_string()))
-        }
-    }
+    use derive_more::Display;
 
     /// The final Error type of RPCs to be serialized to protobuf.
     #[derive(Display, Message)]
@@ -137,12 +82,12 @@ pub mod server {
 
                 async fn dispatch_request(
                     self,
-                    _path: &str,
+                    path: &str,
                     _data: impl AsRef<[u8]>,
                     _json: bool,
                     _query: bool,
                 ) -> Result<Vec<u8>, Error> {
-                    Err(Error::NotFound)
+                    anyhow::bail!("Service not found: {path}")
                 }
             }
         };
@@ -180,7 +125,7 @@ pub mod server {
                             return $tail::from(self.app).dispatch_request(path, data, json, query).await;
                         }
                     )*
-                    Err(Error::NotFound)
+                    anyhow::bail!("Service not found: {service_name}")
                 }
             }
 
@@ -196,45 +141,7 @@ pub mod client {
     use serde::{de::DeserializeOwned, Serialize};
 
     use super::*;
-
-    /// The Error type for the generated client-side RPCs.
-    #[derive(Display, Debug)]
-    pub enum Error {
-        /// Failed to decode the response from the server.
-        DecodeError(DecodeError),
-        /// The error returned by the server.
-        ServerError(super::server::ProtoError),
-        /// Other errors sush as networking error.
-        RpcError(String),
-        /// Other errors such as networking error.
-        Other(anyhow::Error),
-    }
-
-    impl From<DecodeError> for Error {
-        fn from(e: DecodeError) -> Self {
-            Self::DecodeError(e)
-        }
-    }
-
-    #[cfg(feature = "std")]
-    impl std::error::Error for Error {}
-
-    impl From<anyhow::Error> for Error {
-        fn from(error: anyhow::Error) -> Self {
-            Self::Other(error)
-        }
-    }
-
-    #[cfg(not(feature = "std"))]
-    impl From<Error> for anyhow::Error {
-        fn from(error: Error) -> Self {
-            if let Error::Other(err) = error {
-                err
-            } else {
-                Self::msg(error)
-            }
-        }
-    }
+    pub use anyhow::Error;
 
     /// Trait for RPC client to implement the underlying data transport.
     /// Required by the generated RPC client.
