@@ -240,7 +240,7 @@ fn join_path(config: &Builder, package: &str, service: &str, method: &str) -> St
         parts.push(package);
     }
 
-    if config.emit_service_name {
+    if config.emit_service_name || config.keep_service_names.contains(&service.to_string()) {
         parts.push(service);
     }
 

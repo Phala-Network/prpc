@@ -25,6 +25,7 @@ pub fn configure() -> Builder {
         format: true,
         emit_package: true,
         emit_service_name: true,
+        keep_service_names: Vec::new(),
         protoc_args: Vec::new(),
         file_descriptor_set_path: None,
         mod_prefix: Default::default(),
@@ -208,6 +209,7 @@ pub struct Builder {
     pub(crate) proto_path: String,
     pub(crate) emit_package: bool,
     pub(crate) emit_service_name: bool,
+    pub(crate) keep_service_names: Vec<String>,
     pub(crate) compile_well_known_types: bool,
     pub(crate) protoc_args: Vec<OsString>,
 
@@ -358,6 +360,12 @@ impl Builder {
     /// Disable emitting service name in rpc endpoints.
     pub fn disable_service_name_emission(mut self) -> Self {
         self.emit_service_name = false;
+        self
+    }
+
+    /// Keep the service name in rpc endpoints.
+    pub fn keep_service_name(mut self, name: impl Into<String>) -> Self {
+        self.keep_service_names.push(name.into());
         self
     }
 
