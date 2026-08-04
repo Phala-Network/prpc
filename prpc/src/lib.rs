@@ -172,11 +172,15 @@ pub mod codec {
     /// from `null`, so translate here instead of making every transport special-case it.
     ///
     /// An empty body for a non-unit message is a protocol error and is reported as one.
-    pub fn decode_json_from_slice<'a, T>(data: &'a [u8]) -> Result<T, serde_json::Error>
+    pub fn decode_json_from_slice<T>(data: &[u8]) -> Result<T, serde_json::Error>
     where
-        T: serde::Deserialize<'a>,
+        T: serde::de::DeserializeOwned + 'static,
     {
-        let data = if data.is_empty() { &b"null"[..] } else { data };
+        if data.is_empty() {
+            if core::any::TypeId::of::<T>() == core::any::TypeId::of::<()>() {
+                return serde_json::from_slice(b"null");
+            }
+        }
         serde_json::from_slice(data)
     }
 }
