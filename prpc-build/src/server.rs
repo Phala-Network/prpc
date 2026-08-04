@@ -274,7 +274,7 @@ fn generate_unary<T: Method>(
                 Ok(Vec::new())
             }
             #(else) {
-                Ok(serde_json::to_vec(&response)?)
+                Ok(::prpc::serde_json::to_vec(&response)?)
             }
         }
     } else {
