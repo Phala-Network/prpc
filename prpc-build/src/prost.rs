@@ -102,7 +102,7 @@ impl crate::Method for Method {
         &self,
         proto_path: &str,
         compile_well_known_types: bool,
-    ) -> (Option<TokenStream>, TokenStream) {
+    ) -> (Option<TokenStream>, Option<TokenStream>) {
         let request = if is_empty_type(&self.input_proto_type) {
             None
         } else {
@@ -123,18 +123,27 @@ impl crate::Method for Method {
             )
         };
 
-        let response = if (is_google_type(&self.output_proto_type) && !compile_well_known_types)
-            || self.output_type.starts_with("::")
-        {
-            self.output_type.parse::<TokenStream>().unwrap()
-        } else if self.output_type.starts_with("crate::") {
-            syn::parse_str::<syn::Path>(&self.output_type)
-                .unwrap()
-                .to_token_stream()
+        // prost maps `google.protobuf.Empty` to the Rust unit type, but only when the
+        // well-known types are not compiled into the crate. Only then is the response a
+        // unit that gets encoded as an empty body.
+        let response = if is_empty_type(&self.output_proto_type) && !compile_well_known_types {
+            None
         } else {
-            syn::parse_str::<syn::Path>(&format!("{proto_path}::{}", self.output_type))
-                .unwrap()
-                .to_token_stream()
+            Some(
+                if (is_google_type(&self.output_proto_type) && !compile_well_known_types)
+                    || self.output_type.starts_with("::")
+                {
+                    self.output_type.parse::<TokenStream>().unwrap()
+                } else if self.output_type.starts_with("crate::") {
+                    syn::parse_str::<syn::Path>(&self.output_type)
+                        .unwrap()
+                        .to_token_stream()
+                } else {
+                    syn::parse_str::<syn::Path>(&format!("{proto_path}::{}", self.output_type))
+                        .unwrap()
+                        .to_token_stream()
+                },
+            )
         };
 
         (request, response)

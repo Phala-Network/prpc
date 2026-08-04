@@ -164,4 +164,40 @@ pub mod codec {
         msg.encode_raw(&mut buf);
         buf
     }
+
+    /// Decode a JSON-encoded message from a response or request body.
+    ///
+    /// A unit message (`google.protobuf.Empty`) is encoded as an empty body, mirroring
+    /// the protobuf codec where a unit encodes to zero bytes. serde only produces a unit
+    /// from `null`, so translate here instead of making every transport special-case it.
+    ///
+    /// An empty body for a non-unit message is a protocol error and is reported as one.
+    pub fn decode_json_from_slice<'a, T>(data: &'a [u8]) -> Result<T, serde_json::Error>
+    where
+        T: serde::Deserialize<'a>,
+    {
+        let data = if data.is_empty() { &b"null"[..] } else { data };
+        serde_json::from_slice(data)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::codec::decode_json_from_slice;
+
+    #[test]
+    fn empty_json_body_decodes_to_unit() {
+        assert_eq!(decode_json_from_slice::<()>(b"").unwrap(), ());
+    }
+
+    #[test]
+    fn non_empty_json_bodies_are_untouched() {
+        assert_eq!(decode_json_from_slice::<u32>(b"7").unwrap(), 7);
+        assert_eq!(decode_json_from_slice::<()>(b"null").unwrap(), ());
+    }
+
+    #[test]
+    fn empty_json_body_for_a_non_unit_message_is_an_error() {
+        assert!(decode_json_from_slice::<u32>(b"").is_err());
+    }
 }

@@ -119,6 +119,7 @@ fn generate_trait_methods<T: Service>(
 
         let (req_message, res_message) =
             method.request_response_name(proto_path, compile_well_known_types);
+        let res_message = res_message.unwrap_or_else(|| quote!(()));
 
         let method_doc = generate_doc_comments(method.comment());
 
@@ -246,7 +247,7 @@ fn generate_unary<T: Method>(
     method_ident: Ident,
     json: bool,
 ) -> TokenStream {
-    let (request, _response) =
+    let (request, response) =
         method.request_response_name(&config.proto_path, config.compile_well_known_types);
 
     if json {
@@ -265,7 +266,16 @@ fn generate_unary<T: Method>(
                 };
                 let response = self.inner.#method_ident(input).await?;
             }
-            Ok(serde_json::to_vec(&response)?)
+            #(if response.is_none()) {
+                // A unit response carries no value. Encode it as an empty body rather
+                // than the JSON `null` serde would produce, matching the protobuf codec
+                // which encodes a unit as zero bytes.
+                let () = response;
+                Ok(Vec::new())
+            }
+            #(else) {
+                Ok(serde_json::to_vec(&response)?)
+            }
         }
     } else {
         template_quote::quote! {

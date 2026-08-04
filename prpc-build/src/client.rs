@@ -71,6 +71,7 @@ fn generate_unary<T: Method>(method: &T, config: &Builder, path: String) -> Toke
     let ident = format_ident!("{}", method.name());
     let (request, response) =
         method.request_response_name(&config.proto_path, config.compile_well_known_types);
+    let response = response.unwrap_or_else(|| quote!(()));
 
     template_quote::quote! {
         pub async fn #ident(
