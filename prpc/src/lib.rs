@@ -3,13 +3,14 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 
 pub use prost::Message;
 
 pub mod serde_helpers;
 
 pub use serde_json;
+#[cfg(feature = "std")]
 pub use serde_qs;
 
 pub mod server {
@@ -32,6 +33,16 @@ pub mod server {
                 message: message.into(),
             }
         }
+    }
+
+    /// Decodes a URL query string into a request message.
+    pub fn decode_query<T: serde::de::DeserializeOwned>(_data: &[u8]) -> Result<T, Error> {
+        #[cfg(feature = "std")]
+        return Ok(serde_qs::from_bytes(_data)?);
+        #[cfg(not(feature = "std"))]
+        Err(anyhow::anyhow!(
+            "query string decoding requires the std feature"
+        ))
     }
 
     pub trait NamedService: Service {
