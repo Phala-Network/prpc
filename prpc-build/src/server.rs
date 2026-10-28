@@ -259,7 +259,7 @@ fn generate_unary<T: Method>(
                 let input: #request = if data.is_empty() {
                     Default::default()
                 } else if _query {
-                    ::prpc::serde_qs::from_bytes(data)?
+                    ::prpc::server::decode_query(data)?
                 } else {
                     ::prpc::serde_json::from_slice(data)?
                 };
